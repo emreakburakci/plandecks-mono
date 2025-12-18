@@ -2,8 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
     // Vite kullanıyorsanız import.meta.env, Create React App ise process.env
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1',
-});
+    baseURL: import.meta.env.VITE_API_URL || '/api/v1',});
 
 // 1. İstek (Request) Interceptor: Her isteğe Token ekler
 api.interceptors.request.use(
