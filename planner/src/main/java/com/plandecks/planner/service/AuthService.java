@@ -79,7 +79,7 @@ public class AuthService {
         user.setResetPasswordToken(token);
         userRepo.save(user);
 
-        String frontendUrl = "frontendUrlValue"; // frontendUrlValue
+        String frontendUrl = frontendUrlValue; // frontendUrlValue
 
         // Mail gönder
         String link = frontendUrl + "/reset-password?token=" + token;
