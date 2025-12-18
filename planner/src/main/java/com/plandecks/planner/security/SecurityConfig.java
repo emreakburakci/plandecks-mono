@@ -46,7 +46,9 @@ public class SecurityConfig {
 
         // Frontend adresine izin ver (Vite default portu 5173'tür, React 3000 olabilir)
         // Hepsine izin vermek için: configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("https://plandecks.com",
+                "https://www.plandecks.com",
+                "http://plandecks.com","http://localhost:5173", "http://localhost:3000"));
 
         // İzin verilen HTTP metodları
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
