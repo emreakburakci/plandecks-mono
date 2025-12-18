@@ -262,15 +262,16 @@ export default function ScheduleCalendar() {
                     </div>
                 </div>
 
-                {/* 3. AYARLAR PANELİ (Responsive İyileştirme) */}
+                {/* 3. AYARLAR PANELİ (Dikey Dizilim) */}
                 {showSettings && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 mt-2 animate-fade-in-down">
-                        {/* Strateji Seçimi */}
+                    <div className="flex flex-col gap-6 border-t pt-4 mt-2 animate-fade-in-down">
+
+                        {/* Planlama Stratejisi - Üstte */}
                         <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
                             <h3 className="font-semibold text-purple-800 mb-3 text-sm flex items-center gap-2">
                                 <Settings size={16}/> Planlama Stratejisi
                             </h3>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 max-w-md"> {/* max-w-md ile çok genişlemesini önledik */}
                                 <button
                                     onClick={() => setStrategy("COMPRESSED")}
                                     className={`flex-1 p-2 rounded text-[11px] font-bold transition ${strategy === "COMPRESSED" ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-gray-600 border'}`}
@@ -286,15 +287,17 @@ export default function ScheduleCalendar() {
                             </div>
                         </div>
 
-                        {/* Müsaitlik Grid alanı otomatik olarak AvailabilityGrid'e aktarılacak */}
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        {/* Planlanabilir Saatler - Altta */}
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 overflow-hidden">
                             <h3 className="font-semibold text-blue-800 mb-2 text-sm">📅 Planlanabilir Saatler</h3>
+                            {/* setAvailability prop'u parantezsiz olarak geçilmeli */}
                             <AvailabilityGrid availability={globalAvailability} setAvailability={setGlobalAvailability} />
                         </div>
 
                     </div>
-
                 )}
+
+
             </div>
 
             {/* --- LOADING MODAL --- */}
