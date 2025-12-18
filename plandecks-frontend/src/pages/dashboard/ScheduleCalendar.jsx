@@ -302,11 +302,11 @@ export default function ScheduleCalendar() {
             {loading && <LoadingModal />}
 
             {/* TAKVİM ALANI */}
-            <div className="flex-1 bg-white p-4 rounded-lg shadow relative min-h-[85vh]">
-
+            <div className="flex-1 bg-white p-4 rounded-lg shadow relative min-h-[600px] h-full overflow-hidden">
                 {/* Özel CSS Injection: Slot yüksekliğini artırır */}
                 <style>{`
           .fc-timegrid-slot { height: 60px !important; } 
+          .fc .fc-col-header-cell { background: white; }
         `}</style>
 
                 <FullCalendar
@@ -318,7 +318,7 @@ export default function ScheduleCalendar() {
                         center: 'title',
                         right: window.innerWidth < 768 ? '' : 'timeGridWeek,timeGridDay'
                     }}
-                    height="auto"
+                    height="100%"
                     slotMinTime="00:00:00"
                     slotMaxTime="24:00:00"
                     allDaySlot={false}
