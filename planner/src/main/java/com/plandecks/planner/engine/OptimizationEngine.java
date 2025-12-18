@@ -67,24 +67,59 @@ public class OptimizationEngine {
         // --- 2. DEĞİŞKENLERİ OLUŞTUR ---
         for (StudentGroup group : groups) {
             for (Course course : group.courses()) {
+
+                // ADIM 1: ÖĞRETMENİ DERS BAZINDA SABİTLE (Döngü Dışına Alındı)
+                // ----------------------------------------------------------------
+                List<Integer> validTeacherIds = teachers.stream()
+                        .filter(t -> t.subjects().contains(course.subject()))
+                        .map(Teacher::id).toList();
+
+                if(validTeacherIds.isEmpty()) {
+                    System.out.println("UYARI: " + group.name() + " grubunun " + course.subject() + " dersi için uygun öğretmen bulunamadı!");
+                    continue;
+                }
+
+                // Bu dersin tüm saatleri için TEK bir öğretmen seçilecek
+                IntVar commonTeacherVar = model.newIntVarFromDomain(
+                        Domain.fromValues(validTeacherIds.stream().mapToLong(Integer::longValue).toArray()),
+                        "teacher_course_" + course.id() + "_group_" + group.id()
+                );
+
+
+                // ADIM 2: DERSLİĞİ DERS BAZINDA SABİTLE (Opsiyonel - İsterseniz döngü içinde bırakabilirsiniz)
+                // ----------------------------------------------------------------
+                List<String> requiredFeatures = course.requiredEquipment();
+                List<Integer> validRoomIds = rooms.stream()
+                        .filter(r -> r.capacity() >= group.size())
+                        .filter(r -> {
+                            if (requiredFeatures == null || requiredFeatures.isEmpty()) return true;
+                            if (r.features() == null) return false;
+                            return new HashSet<>(r.features()).containsAll(requiredFeatures);
+                        })
+                        .map(Room::id).toList();
+
+                if(validRoomIds.isEmpty()) {
+                    System.out.println("UYARI: " + group.name() + " grubunun " + course.subject() + " dersi için uygun oda bulunamadı!");
+                    continue;
+                }
+
+                // Bu dersin tüm saatleri için TEK bir oda seçilecek
+                IntVar commonRoomVar = model.newIntVarFromDomain(
+                        Domain.fromValues(validRoomIds.stream().mapToLong(Integer::longValue).toArray()),
+                        "room_course_" + course.id() + "_group_" + group.id()
+                );
+
+
+                // ADIM 3: SAATLERİ OLUŞTUR (Döngü Sadece Saatler İçin Dönecek)
+                // ----------------------------------------------------------------
                 for (int i = 0; i < course.weeklyCount(); i++) {
 
-                    // Ders Zamanı (Sadece kullanıcının izin verdiği saatler)
+                    // Ders Zamanı (Her ders saati farklı zamanda olmalı)
                     IntVar startVar = model.newIntVarFromDomain(globalDomain, "time_" + lessonIdCounter);
 
-                    // Öğretmen Seçimi
-                    List<Integer> validTeacherIds = teachers.stream()
-                            .filter(t -> t.subjects().contains(course.subject()))
-                            .map(Teacher::id).toList();
+                    // --- KISITLAMALAR ---
 
-                    if(validTeacherIds.isEmpty()) continue;
-
-                    IntVar teacherVar = model.newIntVarFromDomain(
-                            Domain.fromValues(validTeacherIds.stream().mapToLong(Integer::longValue).toArray()),
-                            "teacher_" + lessonIdCounter
-                    );
-
-                    // Öğretmen Müsaitlik Kısıtı
+                    // 1. Seçilen "Ortak Öğretmen" o saatte müsait olmalı
                     List<long[]> validTeacherTimePairs = new ArrayList<>();
                     for (Integer tId : validTeacherIds) {
                         Teacher t = teachers.stream().filter(x -> x.id() == tId).findFirst().get();
@@ -96,29 +131,11 @@ public class OptimizationEngine {
                         }
                     }
                     if (!validTeacherTimePairs.isEmpty()) {
-                        TableConstraint tc = model.addAllowedAssignments(Arrays.asList(teacherVar, startVar));
+                        TableConstraint tc = model.addAllowedAssignments(Arrays.asList(commonTeacherVar, startVar));
                         for(long[] pair : validTeacherTimePairs) tc.addTuple(pair);
                     }
 
-                    // Oda Seçimi
-                    List<String> requiredFeatures = course.requiredEquipment();
-                    List<Integer> validRoomIds = rooms.stream()
-                            .filter(r -> r.capacity() >= group.size())
-                            .filter(r -> {
-                                if (requiredFeatures == null || requiredFeatures.isEmpty()) return true;
-                                if (r.features() == null) return false;
-                                return new HashSet<>(r.features()).containsAll(requiredFeatures);
-                            })
-                            .map(Room::id).toList();
-
-                    if(validRoomIds.isEmpty()) continue;
-
-                    IntVar roomVar = model.newIntVarFromDomain(
-                            Domain.fromValues(validRoomIds.stream().mapToLong(Integer::longValue).toArray()),
-                            "room_" + lessonIdCounter
-                    );
-
-                    // Oda Müsaitliği
+                    // 2. Seçilen "Ortak Oda" o saatte müsait olmalı
                     List<long[]> validRoomTimePairs = new ArrayList<>();
                     for (Integer rId : validRoomIds) {
                         Room r = rooms.stream().filter(x -> x.id() == rId).findFirst().get();
@@ -130,11 +147,12 @@ public class OptimizationEngine {
                         }
                     }
                     if (!validRoomTimePairs.isEmpty()) {
-                        TableConstraint rc = model.addAllowedAssignments(Arrays.asList(roomVar, startVar));
+                        TableConstraint rc = model.addAllowedAssignments(Arrays.asList(commonRoomVar, startVar));
                         for(long[] pair : validRoomTimePairs) rc.addTuple(pair);
                     }
 
-                    allLessons.add(new LessonVar(lessonIdCounter++, group, course, startVar, teacherVar, roomVar));
+                    // Listeye eklerken artık "common" değişkenleri kullanıyoruz
+                    allLessons.add(new LessonVar(lessonIdCounter++, group, course, startVar, commonTeacherVar, commonRoomVar));
                 }
             }
         }

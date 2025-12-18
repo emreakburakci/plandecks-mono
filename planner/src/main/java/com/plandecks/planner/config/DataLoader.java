@@ -1,7 +1,6 @@
 package com.plandecks.planner.config;
 
 import com.plandecks.planner.model.entity.*;
-import com.plandecks.planner.model.request.Course;
 import com.plandecks.planner.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -27,131 +26,121 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Kullanıcı adı: "admin_v2" (Karışıklık olmaması için yeni kullanıcı)
-        if (userRepo.findByUsername("admin_v2").isEmpty()) {
-            System.out.println("🔥 FAZ-5: AYRIŞTIRILMIŞ DERS İSİMLERİ İLE SENARYO Yükleniyor...");
+        // Kullanıcı: "admin_single_course"
+        if (userRepo.findByUsername("admin_single_course").isEmpty()) {
+            System.out.println("🔥 FAZ-10: TEK MÜFREDAT - ÇOKLU GRUP SENARYOSU YÜKLENİYOR...");
 
             UserEntity user = UserEntity.builder()
-                    .username("admin_v2")
+                    .username("admin_single_course")
                     .password(passwordEncoder.encode("12345"))
-                    .email("admin2@school.com")
+                    .email("admin_single@school.com")
                     .enabled(true)
                     .build();
             userRepo.save(user);
 
-            // Tam Müsaitlik Matrisi (7x24 açık)
             boolean[][] fullOpen = new boolean[7][24];
             for (boolean[] row : fullOpen) Arrays.fill(row, true);
             String fullJson = objectMapper.writeValueAsString(fullOpen);
 
-            createDistinctCourseScenario(user, fullJson);
-
-            System.out.println("✅ FAZ-5 VERİLERİ HAZIR! Giriş: admin_v2 / 12345");
+            createSingleCourseScenario(user, fullJson);
+            System.out.println("✅ FAZ-10 TAMAMLANDI! (Dersler Unique) Giriş: admin_single_course / 12345");
         }
     }
 
-    private void createDistinctCourseScenario(UserEntity user, String fullJson) {
-        // --- 1. ODALAR (12 Adet) ---
+    private void createSingleCourseScenario(UserEntity user, String fullJson) {
+        // --- 1. ODALAR ---
         List<RoomEntity> rooms = new ArrayList<>();
-        // Genel Derslikler (101-110)
-        for (int i = 1; i <= 10; i++) {
-            rooms.add(roomRepo.save(new RoomEntity(null, "Derslik 10" + (i == 10 ? "0" : i), "Classroom", 30, new ArrayList<>(), user)));
-        }
-        // Özel Odalar
-        RoomEntity lab = roomRepo.save(new RoomEntity(null, "Bilim Laboratuvarı", "Lab", 40, List.of("LabEquipment"), user));
-        RoomEntity gym = roomRepo.save(new RoomEntity(null, "Kapalı Spor Salonu", "Gym", 100, List.of("Sport"), user));
+        for (int i = 1; i <= 10; i++) rooms.add(roomRepo.save(new RoomEntity(null, "Derslik 10" + (i == 10 ? "0" : i), "Classroom", 30, new ArrayList<>(), user)));
+        RoomEntity lab = roomRepo.save(new RoomEntity(null, "Lab", "Lab", 40, List.of("Lab"), user));
+        RoomEntity gym = roomRepo.save(new RoomEntity(null, "Spor Salonu", "Gym", 100, List.of("Spor"), user));
         rooms.add(lab);
         rooms.add(gym);
 
-        // --- 2. ÖĞRETMENLER (18 Adet - Branşlarına Göre) ---
-        // Matematik Zümresi
-        TeacherEntity tMat1 = createTeacher(user, "Ahmet Hoca (Mat-9/12)", List.of("Matematik"), fullJson);
-        TeacherEntity tMat2 = createTeacher(user, "Berna Hoca (Mat-10)", List.of("Matematik", "Geometri"), fullJson);
-        TeacherEntity tMat3 = createTeacher(user, "Cemal Hoca (Mat-11)", List.of("Matematik", "İleri Matematik"), fullJson);
 
-        // Fen Zümresi
-        TeacherEntity tFiz = createTeacher(user, "Derya Hoca (Fizik)", List.of("Fizik"), fullJson);
-        TeacherEntity tKim = createTeacher(user, "Emre Hoca (Kimya)", List.of("Kimya"), fullJson);
-        TeacherEntity tBiyo = createTeacher(user, "Fatma Hoca (Biyo)", List.of("Biyoloji"), fullJson);
-
-        // Dil & Edebiyat Zümresi
-        TeacherEntity tEdeb1 = createTeacher(user, "Gökhan Hoca (Edeb)", List.of("Edebiyat"), fullJson);
-        TeacherEntity tEdeb2 = createTeacher(user, "Hale Hoca (Edeb)", List.of("Edebiyat"), fullJson);
-        TeacherEntity tIng1 = createTeacher(user, "Mr. John (Ing)", List.of("İngilizce"), fullJson);
-        TeacherEntity tIng2 = createTeacher(user, "Ms. Jane (Ing)", List.of("İngilizce"), fullJson);
-        TeacherEntity tAlm = createTeacher(user, "Klaus Hoca (Alm)", List.of("Almanca"), fullJson);
-
-        // Sosyal & Kültür Zümresi
-        TeacherEntity tTar = createTeacher(user, "Leyla Hoca (Tarih)", List.of("Tarih"), fullJson);
-        TeacherEntity tCog = createTeacher(user, "Mehmet Hoca (Cog)", List.of("Coğrafya"), fullJson);
-        TeacherEntity tFel = createTeacher(user, "Nur Hoca (Felsefe)", List.of("Felsefe"), fullJson);
-        TeacherEntity tDin = createTeacher(user, "Orhan Hoca (Din)", List.of("Din Kültürü"), fullJson);
-
-        // Yetenek & Teknoloji
-        TeacherEntity tBed = createTeacher(user, "Pınar Hoca (Spor)", List.of("Beden Eğitimi"), fullJson);
-        TeacherEntity tMuz = createTeacher(user, "Rıza Hoca (Müzik)", List.of("Müzik"), fullJson);
-        TeacherEntity tBil = createTeacher(user, "Selin Hoca (Bilg)", List.of("Bilgisayar"), fullJson);
+        // --- 2. ÖĞRETMENLER ---
+        createTeacher(user, "Ahmet Hoca (9-12)", List.of("MAT-9", "MAT-12"), fullJson);
+        createTeacher(user, "Berna Hoca (10)",   List.of("MAT-10"), fullJson);
+        createTeacher(user, "Cemal Hoca (11)",   List.of("MAT-11"), fullJson);
+        createTeacher(user, "Derya Hoca (Fiz)",  List.of("FIZ-9", "FIZ-10", "FIZ-11"), fullJson);
+        createTeacher(user, "Emre Hoca (Kim)",   List.of("KIM-9", "KIM-10", "KIM-11"), fullJson);
+        createTeacher(user, "Fatma Hoca (Biyo)", List.of("BIY-9", "BIY-10", "BIY-12"), fullJson);
+        createTeacher(user, "Gökhan Hoca (Edeb)", List.of("EDB-9", "EDB-11"), fullJson);
+        createTeacher(user, "Hale Hoca (Edeb)",   List.of("EDB-10", "EDB-12"), fullJson);
+        createTeacher(user, "Mr. John (Ing)",     List.of("ING-9", "ING-10"), fullJson);
+        createTeacher(user, "Ms. Jane (Ing)",     List.of("ING-11", "ING-12"), fullJson);
+        createTeacher(user, "Klaus Hoca (Alm)",   List.of("ALM-11"), fullJson);
+        createTeacher(user, "Leyla Hoca (Trh)",   List.of("TAR-10", "TAR-12"), fullJson);
+        createTeacher(user, "Mehmet Hoca (Cog)",  List.of("COG-10", "COG-12"), fullJson);
+        createTeacher(user, "Nur Hoca (Fel)",     List.of("FEL-10"), fullJson);
+        createTeacher(user, "Orhan Hoca (Din)",   List.of("DIN-12"), fullJson);
+        createTeacher(user, "Pınar Hoca (Spor)",  List.of("BED-9", "BED-10"), fullJson);
+        createTeacher(user, "Selin Hoca (Bilg)",  List.of("BIL-9"), fullJson);
 
 
-        // --- 3. DERSLER (22 Farklı Ders - İsimleri Benzersiz) ---
+        // --- 3. MÜFREDAT TANIMLARI (Her dersten SADECE 1 TANE oluşturuyoruz) ---
 
-        // 9. Sınıf Müfredatı
-        CourseEntity c_Mat9 = createCourse(user, "9. Sınıf Matematik", 6, tMat1, null);
-        CourseEntity c_Fiz9 = createCourse(user, "9. Sınıf Fizik", 2, tFiz, null);
-        CourseEntity c_Kim9 = createCourse(user, "9. Sınıf Kimya", 2, tKim, null);
-        CourseEntity c_Biyo9 = createCourse(user, "9. Sınıf Biyoloji", 2, tBiyo, null);
-        CourseEntity c_Edeb9 = createCourse(user, "9. Sınıf Edebiyat", 5, tEdeb1, null);
-        CourseEntity c_Ing9 = createCourse(user, "9. Sınıf İngilizce", 4, tIng1, null);
-        CourseEntity c_Bed9 = createCourse(user, "9. Sınıf Beden Eğt.", 2, tBed, List.of("Sport"));
-        CourseEntity c_BilGiris = createCourse(user, "Bilişime Giriş", 2, tBil, null); // 9'lar için ortak
+        // 9. Sınıf Müfredatı (Tekil Nesneler)
+        CourseEntity mat9 = createCourse(user, 6, "MAT-9", null);
+        CourseEntity fiz9 = createCourse(user, 2, "FIZ-9", null);
+        CourseEntity kim9 = createCourse(user, 2, "KIM-9", List.of("Lab"));
+        CourseEntity biy9 = createCourse(user, 2, "BIY-9", null);
+        CourseEntity edb9 = createCourse(user, 5, "EDB-9", null);
+        CourseEntity ing9 = createCourse(user, 4, "ING-9", null);
+        CourseEntity bed9 = createCourse(user, 2, "BED-9", List.of("Spor"));
+        CourseEntity bil9 = createCourse(user, 2, "BIL-9", null);
+        // Bu listeyi 9. sınıflara dağıtacağız
+        List<CourseEntity> curriculum9 = List.of(mat9, fiz9, kim9, biy9, edb9, ing9, bed9, bil9);
 
         // 10. Sınıf Müfredatı
-        CourseEntity c_Mat10 = createCourse(user, "10. Sınıf Matematik", 6, tMat2, null);
-        CourseEntity c_Tar10 = createCourse(user, "10. Sınıf Tarih", 2, tTar, null);
-        CourseEntity c_Cog10 = createCourse(user, "10. Sınıf Coğrafya", 2, tCog, null);
-        CourseEntity c_Fel10 = createCourse(user, "10. Sınıf Felsefe", 2, tFel, null);
-        CourseEntity c_Ing10 = createCourse(user, "10. Sınıf İngilizce", 4, tIng2, null);
-        CourseEntity c_Proje = createCourse(user, "Proje Tasarımı", 2, tBil, null); // 10'lar için ortak
+        CourseEntity mat10 = createCourse(user, 6, "MAT-10", null);
+        CourseEntity fiz10 = createCourse(user, 2, "FIZ-10", null);
+        CourseEntity kim10 = createCourse(user, 2, "KIM-10", null);
+        CourseEntity biy10 = createCourse(user, 2, "BIY-10", null);
+        CourseEntity edb10 = createCourse(user, 5, "EDB-10", null);
+        CourseEntity ing10 = createCourse(user, 4, "ING-10", null);
+        CourseEntity tar10 = createCourse(user, 2, "TAR-10", null);
+        CourseEntity cog10 = createCourse(user, 2, "COG-10", null);
+        CourseEntity fel10 = createCourse(user, 2, "FEL-10", null);
+        CourseEntity bed10 = createCourse(user, 2, "BED-10", List.of("Spor"));
+        List<CourseEntity> curriculum10 = List.of(mat10, fiz10, kim10, biy10, edb10, ing10, tar10, cog10, fel10, bed10);
 
-        // 11. Sınıf Müfredatı (Sayısal Ağırlıklı)
-        CourseEntity c_Mat11_Ileri = createCourse(user, "11. İleri Matematik", 6, tMat3, null);
-        CourseEntity c_Fiz11_Ileri = createCourse(user, "11. İleri Fizik", 4, tFiz, List.of("LabEquipment")); // Lab Şartı
-        CourseEntity c_Kim11_Ileri = createCourse(user, "11. İleri Kimya", 4, tKim, List.of("LabEquipment")); // Lab Şartı
-        CourseEntity c_Edeb11 = createCourse(user, "11. Sınıf Edebiyat", 5, tEdeb2, null);
-        CourseEntity c_Alm11 = createCourse(user, "11. Sınıf Almanca", 2, tAlm, null);
+        // 11. Sınıf Müfredatı
+        CourseEntity mat11 = createCourse(user, 6, "MAT-11", null);
+        CourseEntity fiz11 = createCourse(user, 4, "FIZ-11", List.of("Lab"));
+        CourseEntity kim11 = createCourse(user, 4, "KIM-11", List.of("Lab"));
+        CourseEntity edb11 = createCourse(user, 5, "EDB-11", null);
+        CourseEntity ing11 = createCourse(user, 4, "ING-11", null);
+        CourseEntity alm11 = createCourse(user, 2, "ALM-11", null);
+        List<CourseEntity> curriculum11 = List.of(mat11, fiz11, kim11, edb11, ing11, alm11);
 
-        // 12. Sınıf Müfredatı (Sözel/EA Ağırlıklı)
-        CourseEntity c_Mat12_Temel = createCourse(user, "12. Temel Matematik", 2, tMat1, null);
-        CourseEntity c_Edeb12_Ileri = createCourse(user, "12. İleri Edebiyat", 5, tEdeb2, null);
-        CourseEntity c_Muz12 = createCourse(user, "12. Sınıf Müzik", 2, tMuz, null);
-        CourseEntity c_Din12 = createCourse(user, "Din Kültürü ve Ahlak", 1, tDin, null);
-        CourseEntity c_Trafik = createCourse(user, "Trafik ve İlkyardım", 1, tBiyo, null); // Biyolojici giriyor
+        // 12. Sınıf Müfredatı
+        CourseEntity mat12 = createCourse(user, 4, "MAT-12", null);
+        CourseEntity edb12 = createCourse(user, 5, "EDB-12", null);
+        CourseEntity ing12 = createCourse(user, 4, "ING-12", null);
+        CourseEntity tar12 = createCourse(user, 2, "TAR-12", null);
+        CourseEntity cog12 = createCourse(user, 2, "COG-12", null);
+        CourseEntity din12 = createCourse(user, 1, "DIN-12", null);
+        CourseEntity biy12 = createCourse(user, 1, "BIY-12", null);
+        List<CourseEntity> curriculum12 = List.of(mat12, edb12, ing12, tar12, cog12, din12, biy12);
 
 
-        // --- 4. GRUPLAR (10 Sınıf) ---
+        // --- 4. GRUPLARA MÜFREDAT ATAMA ---
+        // Artık dersleri kopyalamıyoruz, var olan ders nesnelerini listeye ekliyoruz.
+        // Veritabanında: 9-A ve 9-B aynı "MAT-9 (ID:1)" satırına refere edecek.
 
-        // 9. Sınıflar (3 Şube - Toplam 25 Saat)
-        List<CourseEntity> curr9 = List.of(c_Mat9, c_Fiz9, c_Kim9, c_Biyo9, c_Edeb9, c_Ing9, c_Bed9, c_BilGiris);
-        createGroup(user, "9-A", 30, curr9);
-        createGroup(user, "9-B", 30, curr9);
-        createGroup(user, "9-C", 30, curr9);
+        createGroup(user, "9-A", 30, curriculum9);
+        createGroup(user, "9-B", 30, curriculum9);
+        createGroup(user, "9-C", 30, curriculum9);
 
-        // 10. Sınıflar (3 Şube - Toplam ~25 Saat)
-        // Not: 10. sınıflar 9. sınıf Edebiyat ve Kimya derslerini tekrar alıyor gibi (Test amaçlı karmaşa)
-        List<CourseEntity> curr10 = List.of(c_Mat10, c_Tar10, c_Cog10, c_Fel10, c_Ing10, c_Proje, c_Bed9); // c_Bed9'u ortak kullanıyorlar (Spor salonu çakışması testi için)
-        createGroup(user, "10-A", 30, curr10);
-        createGroup(user, "10-B", 30, curr10);
-        createGroup(user, "10-C", 30, curr10);
+        createGroup(user, "10-A", 30, curriculum10);
+        createGroup(user, "10-B", 30, curriculum10);
+        createGroup(user, "10-C", 30, curriculum10);
 
-        // 11. Sınıflar (2 Şube - Toplam ~21 Saat)
-        List<CourseEntity> curr11 = List.of(c_Mat11_Ileri, c_Fiz11_Ileri, c_Kim11_Ileri, c_Edeb11, c_Alm11);
-        createGroup(user, "11-A (Sayısal)", 25, curr11);
-        createGroup(user, "11-B (Sayısal)", 25, curr11);
+        createGroup(user, "11-A (Sayısal)", 25, curriculum11);
+        createGroup(user, "11-B (Sayısal)", 25, curriculum11);
 
-        // 12. Sınıflar (2 Şube - Toplam ~20 Saat)
-        List<CourseEntity> curr12 = List.of(c_Mat12_Temel, c_Edeb12_Ileri, c_Muz12, c_Din12, c_Trafik, c_Ing10); // İngilizce 10'u tekrar alıyorlar
-        createGroup(user, "12-A (Sözel)", 25, curr12);
-        createGroup(user, "12-B (EA)", 25, curr12);
+        createGroup(user, "12-A (Sözel)", 25, curriculum12);
+        createGroup(user, "12-B (EA)", 25, curriculum12);
     }
 
     // --- YARDIMCI METODLAR ---
@@ -160,23 +149,26 @@ public class DataLoader implements CommandLineRunner {
         return teacherRepo.save(new TeacherEntity(null, name, subjects, availability, user, null));
     }
 
-    private CourseEntity createCourse(UserEntity user, String name, int hours, TeacherEntity teacher, List<String> requirements) {
-        CourseEntity course = new CourseEntity(null, name, hours, new ArrayList<>(), user);
+    // Ders nesnesi oluşturur ve KAYDEDER (ID'si oluşur)
+    private CourseEntity createCourse(UserEntity user, int hours, String subject, List<String> requirements) {
+        CourseEntity course = new CourseEntity();
+        course.setSubject(subject);
+        course.setWeeklyCount(hours);
+        course.setUser(user);
 
-        if (requirements != null) {
-            course.setRequiredEquipment(requirements);
-        }
 
-        // Dersi veren öğretmenin ilk branşını derse ata (OptimizationEngine eşleşmesi için)
-        course.setSubject(teacher.getSubjects().get(0));
+        if (requirements != null) course.setRequiredEquipment(requirements);
 
         return courseRepo.save(course);
     }
 
     private void createGroup(UserEntity user, String name, int size, List<CourseEntity> courses) {
         StudentGroupEntity group = new StudentGroupEntity(null, name, size, user, new ArrayList<>());
+
+        // Gruba mevcut dersleri ata
         group.setCourses(courses);
         groupRepo.save(group);
+
 
     }
 }
