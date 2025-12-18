@@ -216,57 +216,57 @@ export default function PlanDetail() {
     );
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/dashboard')} className="text-gray-500 hover:text-gray-700">
+        <div className="h-full flex flex-col space-y-4">
+            {/* ÜST BAR - Mobilde dikey, masaüstünde yatay düzen */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex items-center gap-4 w-full">
+                    <button onClick={() => navigate('/dashboard')} className="text-gray-500 hover:text-gray-700 shrink-0">
                         <ArrowLeft size={24}/>
                     </button>
-                    <h2 className="text-2xl font-bold text-gray-800">{planName}</h2>
+                    <h2 className="text-lg md:text-2xl font-bold text-gray-800 truncate">{planName}</h2>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {/* EXCEL BUTONU */}
+                <div className="flex items-center gap-2 w-full md:w-auto">
                     <button
                         onClick={handleExcelExport}
-                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 font-medium transition"
+                        className="flex-1 md:flex-none bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 text-sm font-medium transition"
                     >
-                        <FileSpreadsheet size={18}/> Excel İndir
+                        <FileSpreadsheet size={18}/> <span className="hidden xs:inline">Excel</span>
                     </button>
-
                     <button
                         onClick={handleUpdate}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 font-medium transition"
+                        className="flex-1 md:flex-none bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm font-medium transition"
                     >
-                        <Save size={18}/> Güncelle
+                        <Save size={18}/> <span className="hidden xs:inline">Güncelle</span>
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 bg-white p-4 rounded-lg shadow relative min-h-[85vh]">
-
+            {/* TAKVİM KONTEYNERI - Scrollbar ve Sticky Header için */}
+            <div className="flex-1 bg-white p-4 rounded-lg shadow relative min-h-[500px] h-full overflow-hidden">
                 <style>{`
-                  .fc-timegrid-slot { height: 60px !important; } 
+                  .fc-timegrid-slot { height: 60px !important; }
+                  .fc .fc-col-header-cell { background: white; }
                 `}</style>
 
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[timeGridPlugin, interactionPlugin]}
-                    initialView="timeGridWeek"
+                    // Mobilde günlük, masaüstünde haftalık
+                    initialView={window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek'}
                     headerToolbar={{
-                        left: 'prev,next today',
+                        left: 'prev,next',
                         center: 'title',
-                        right: 'timeGridWeek,timeGridDay'
+                        right: window.innerWidth < 768 ? '' : 'timeGridWeek,timeGridDay'
                     }}
-
+                    height="100%"
+                    stickyHeaderDates={true}
                     slotMinTime="00:00:00"
                     slotMaxTime="24:00:00"
                     allDaySlot={false}
                     weekends={true}
                     firstDay={1}
-                    height="100%"
                     slotLabelInterval="01:00"
-
                     events={events}
                     eventContent={renderEventContent}
                     editable={true}
@@ -274,63 +274,33 @@ export default function PlanDetail() {
                 />
             </div>
 
-            {/* DETAY MODAL (Değişiklik Yok - Aynı Kalacak) */}
+            {/* DETAY MODAL (Aynı Kalıyor) */}
             {isModalOpen && selectedEvent && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all scale-100">
-
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden">
                         <div className="bg-indigo-600 p-4 flex justify-between items-start text-white">
                             <div>
                                 <h3 className="text-lg font-bold flex items-center gap-2">
-                                    <BookOpen size={20} />
-                                    {selectedEvent.title}
+                                    <BookOpen size={20} /> {selectedEvent.title}
                                 </h3>
                                 <p className="text-indigo-200 text-sm mt-1">{selectedEvent.extendedProps.fullTime}</p>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="text-white hover:bg-indigo-700 p-1 rounded-full transition">
-                                <X size={20} />
-                            </button>
+                            <button onClick={() => setIsModalOpen(false)} className="text-white hover:bg-indigo-700 p-1 rounded-full"><X size={20} /></button>
                         </div>
-
                         <div className="p-6 space-y-4">
                             <div className="flex items-center gap-3 text-gray-700">
-                                <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                                    <Users size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500 font-semibold uppercase">Öğrenci Grubu</p>
-                                    <p className="font-medium">{selectedEvent.extendedProps.group}</p>
-                                </div>
+                                <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Users size={20} /></div>
+                                <div><p className="text-xs text-gray-500 font-semibold uppercase">Grup</p><p className="font-medium">{selectedEvent.extendedProps.group}</p></div>
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
-                                <div className="bg-green-100 p-2 rounded-full text-green-600">
-                                    <User size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500 font-semibold uppercase">Öğretmen</p>
-                                    <p className="font-medium">{selectedEvent.extendedProps.teacher}</p>
-                                </div>
+                                <div className="bg-green-100 p-2 rounded-full text-green-600"><User size={20} /></div>
+                                <div><p className="text-xs text-gray-500 font-semibold uppercase">Öğretmen</p><p className="font-medium">{selectedEvent.extendedProps.teacher}</p></div>
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
-                                <div className="bg-purple-100 p-2 rounded-full text-purple-600">
-                                    <MapPin size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500 font-semibold uppercase">Derslik / Mekan</p>
-                                    <p className="font-medium">{selectedEvent.extendedProps.room}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-700">
-                                <div className="bg-orange-100 p-2 rounded-full text-orange-600">
-                                    <Clock size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500 font-semibold uppercase">Zaman Dilimi</p>
-                                    <p className="font-medium">{selectedEvent.start.toLocaleDateString('tr-TR', { weekday: 'long' })}</p>
-                                </div>
+                                <div className="bg-purple-100 p-2 rounded-full text-purple-600"><MapPin size={20} /></div>
+                                <div><p className="text-xs text-gray-500 font-semibold uppercase">Derslik</p><p className="font-medium">{selectedEvent.extendedProps.room}</p></div>
                             </div>
                         </div>
-
                         <div className="bg-gray-50 p-4 flex justify-end">
                             <button onClick={() => setIsModalOpen(false)} className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 transition">Kapat</button>
                         </div>
