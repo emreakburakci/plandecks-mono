@@ -194,87 +194,101 @@ export default function ScheduleCalendar() {
         <div className="h-full flex flex-col relative">
             {/* Üst Bar (Aynı) */}
             <div className="mb-4 bg-white p-4 rounded-lg shadow-sm flex flex-col gap-4">
-                {/* --- YENİ: YARDIM KUTUSU --- */}
+                {/* 1. YARDIM KUTUSU (Responsive Düzenleme) */}
                 {showHelpAlert && (
                     <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg flex items-start justify-between animate-fade-in">
                         <div className="flex gap-3">
-                            <div className="bg-blue-100 p-2 rounded-full text-blue-600 mt-0.5"><Info size={20} /></div>
+                            <div className="bg-blue-100 p-2 rounded-full text-blue-600 mt-0.5 shrink-0"><Info size={20} /></div>
                             <div className="text-sm text-blue-800">
-                                <h4 className="font-bold mb-1">PlanDecks'e Hoş Geldiniz!</h4>
-                                <ul className="list-disc list-inside space-y-1 text-blue-700">
-                                    <li>Önce <strong>"Ayarlar"</strong> butonuna tıklayarak plan saatlerini ve stratejinizi belirleyin.</li>
-                                    <li>Ardından <strong>"Otomatik Planla"</strong> butonuna basarak yapay zekanın planı oluşturmasını bekleyin.</li>
-                                    <li>Oluşan plan üzerinde dersleri sürükleyip bırakarak manuel düzenleme yapabilirsiniz.</li>
+                                <h4 className="font-bold mb-1 text-xs sm:text-sm">PlanDecks'e Hoş Geldiniz!</h4>
+                                <ul className="list-disc list-inside space-y-1 text-blue-700 text-[11px] sm:text-xs">
+                                    <li><strong>"Ayarlar"</strong> kısmından saatleri belirleyin.</li>
+                                    <li><strong>"Otomatik Planla"</strong> ile yapay zekayı çalıştırın.</li>
                                 </ul>
                             </div>
                         </div>
-                        <button onClick={() => setShowHelpAlert(false)} className="text-blue-400 hover:text-blue-600"><X size={18}/></button>
+                        <button onClick={() => setShowHelpAlert(false)} className="text-blue-400 hover:text-blue-600 shrink-0"><X size={18}/></button>
                     </div>
                 )}
-                <div className="flex justify-between items-center flex-wrap gap-4">
-                    <h2 className="text-xl font-bold text-gray-700">Yeni Plan Oluştur
+                {/* 2. KONTROLLER (Taşmayı önleyen ana kısım) */}
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-700 flex items-center gap-2">
+                        Yeni Plan Oluştur
                         <Tooltip text="Bu ekran, öğretmen ve derslik kısıtlamalarına göre en uygun programı otomatik hazırlar." position="right">
                             <HelpCircle size={16} className="text-gray-400 cursor-help"/>
                         </Tooltip>
                     </h2>
-                    <div className="flex gap-4 items-center">
-                        <Tooltip text="Planı kaydederken bu isim kullanılacak." position="bottom">
-                            <input type="text" placeholder="Örn: 2025 Güz Dönemi Taslak 1" className="border p-2 rounded w-64 outline-none focus:ring-2 focus:ring-blue-500" value={planName} onChange={(e) => setPlanName(e.target.value)}/>
-                        </Tooltip>
 
+                    {/* Buton ve Input Grubu */}
+                    <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
+                        {/* Plan İsmi Inputu: Mobilde tam genişlik */}
+                        <div className="w-full lg:w-64">
+                            <Tooltip text="Planı kaydederken bu isim kullanılacak." position="bottom">
+                                <input
+                                    type="text"
+                                    placeholder="Örn: 2025 Güz Taslağı"
+                                    className="border p-2 rounded w-full outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    value={planName}
+                                    onChange={(e) => setPlanName(e.target.value)}
+                                />
+                            </Tooltip>
+                        </div>
 
-                        <Tooltip text="Plan stratejisi ve planlama yapılacak saatleri ayarlayın.">
+                        {/* Aksiyon Butonları: Mobilde 2'li ızgara veya yanyana sığacak şekilde */}
+                        <div className="grid grid-cols-2 sm:flex items-center gap-2">
+                            <Tooltip text="Ayarları Düzenle">
+                                <button onClick={() => setShowSettings(!showSettings)} className="w-full sm:w-auto border px-3 py-2 rounded hover:bg-gray-100 flex items-center justify-center gap-2 text-gray-700 text-xs sm:text-sm transition">
+                                    <Settings size={18}/> {showSettings ? 'Kapat' : 'Ayarlar'}
+                                </button>
+                            </Tooltip>
 
-                        <button onClick={() => setShowSettings(!showSettings)} className="border px-4 py-2 rounded hover:bg-gray-100 flex items-center gap-2 text-gray-700">
-                            <Settings size={18}/>Ayarlar {showSettings ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
-                        </button>
-                        </Tooltip>
+                            <Tooltip text="Otomatik Planla">
+                                <button onClick={handleGenerate} disabled={loading} className="w-full sm:w-auto bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                    {loading ? <Loader className="animate-spin" size={16}/> : <Play size={16}/>} Planla
+                                </button>
+                            </Tooltip>
 
-                        <Tooltip text="Yapay zeka motorunu çalıştırır ve dersleri otomatik yerleştirir.">
-                        <button onClick={handleGenerate} disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
-                            {loading ? <Loader className="animate-spin" size={18}/> : <Play size={18}/>} Otomatik Planla
-                        </button>
-                        </Tooltip>
-
-                        <Tooltip text="Oluşturulan planı kaydeder. Kaydedilen plana Panel sayfasından ulaşabilir üzerinde değişiklik yapabilirsiniz.">
-
-                        <button onClick={handleSave} disabled={events.length === 0} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
-                            <Save size={18}/> Kaydet
-                        </button>
-                        </Tooltip>
-
+                            {/* Kaydet butonu mobilde 2 kolonu kaplayabilir veya yanyana kalabilir */}
+                            <Tooltip text="Planı Kaydet">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={events.length === 0}
+                                    className="col-span-2 sm:col-span-1 w-full sm:w-auto bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm"
+                                >
+                                    <Save size={16}/> Kaydet
+                                </button>
+                            </Tooltip>
+                        </div>
                     </div>
                 </div>
 
+                {/* 3. AYARLAR PANELİ (Responsive İyileştirme) */}
                 {showSettings && (
-                    <div className="border-t pt-4 mt-2 animate-fade-in-down">
-                        {/* 2. Sütun: Planlama Stratejisi (YENİ) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 mt-2 animate-fade-in-down">
+                        {/* Strateji Seçimi */}
                         <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                            <h3 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                                <Settings size={18}/> Strateji
+                            <h3 className="font-semibold text-purple-800 mb-3 text-sm flex items-center gap-2">
+                                <Settings size={16}/> Planlama Stratejisi
                             </h3>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setStrategy("COMPRESSED")}
-                                    className={`flex-1 p-2 rounded text-sm font-medium transition flex flex-col items-center gap-1 ${strategy === "COMPRESSED" ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-gray-600 border hover:bg-gray-50'}`}
+                                    className={`flex-1 p-2 rounded text-[11px] font-bold transition ${strategy === "COMPRESSED" ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-gray-600 border'}`}
                                 >
-                                    <AlignLeft size={20} />
                                     Sıkıştırılmış
                                 </button>
                                 <button
                                     onClick={() => setStrategy("DISTRIBUTED")}
-                                    className={`flex-1 p-2 rounded text-sm font-medium transition flex flex-col items-center gap-1 ${strategy === "DISTRIBUTED" ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-gray-600 border hover:bg-gray-50'}`}
+                                    className={`flex-1 p-2 rounded text-[11px] font-bold transition ${strategy === "DISTRIBUTED" ? 'bg-purple-600 text-white shadow-md' : 'bg-white text-gray-600 border'}`}
                                 >
-                                    <AlignJustify size={20} />
                                     Dağıtılmış
                                 </button>
                             </div>
-                            <p className="text-[10px] text-purple-600 mt-2 text-center">
-                                {strategy === "COMPRESSED" ? "Dersler mümkün olan en erken saatlere yerleştirilir." : "Dersler tüm haftaya daha dengeli yayılmaya çalışılır."}
-                            </p>
                         </div>
+
+                        {/* Müsaitlik Grid alanı otomatik olarak AvailabilityGrid'e aktarılacak */}
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <h3 className="font-semibold text-blue-800 mb-2">📅 Planlanabilir Zaman Dilimleri</h3>
+                            <h3 className="font-semibold text-blue-800 mb-2 text-sm">📅 Planlanabilir Saatler</h3>
                             <AvailabilityGrid availability={globalAvailability} setAvailability={setGlobalAvailability} />
                         </div>
 
@@ -298,12 +312,13 @@ export default function ScheduleCalendar() {
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[timeGridPlugin, interactionPlugin]}
-                    initialView="timeGridWeek"
+                    initialView={window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek'}
                     headerToolbar={{
-                        left: 'prev,next today',
+                        left: 'prev,next',
                         center: 'title',
-                        right: 'timeGridWeek,timeGridDay'
+                        right: window.innerWidth < 768 ? '' : 'timeGridWeek,timeGridDay'
                     }}
+                    height="auto"
                     slotMinTime="00:00:00"
                     slotMaxTime="24:00:00"
                     allDaySlot={false}
@@ -311,7 +326,6 @@ export default function ScheduleCalendar() {
                     firstDay={1}
                     events={events}
                     editable={true}
-                    height="100%"
 
                     // --- YENİ EKLENEN ÖZELLİKLER ---
                     eventContent={renderEventContent} // Kutu içi tasarım

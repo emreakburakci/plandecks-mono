@@ -95,7 +95,7 @@ export default function DashboardHome() {
                             <tr>
                                 <th className="p-4">Plan Adı</th>
                                 <th className="p-4">Oluşturulma Tarihi</th>
-                                <th className="p-4 text-right">İşlem</th>
+                                <th className="p-4 text-left">İşlemler</th>
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -107,19 +107,18 @@ export default function DashboardHome() {
                                     <td className="p-4 text-gray-500 text-sm">
                                         {new Date(plan.createdAt).toLocaleString('tr-TR')}
                                     </td>
-                                    <td className="p-4 text-right">
+                                    {/* Butonları tek bir hücrede (td) topladık */}
+                                    <td className="p-4 text-right flex justify-end gap-2">
                                         <button
                                             onClick={(e) => handleDelete(e, plan.id)}
-                                            className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-100 flex items-center gap-1 ml-auto"
+                                            className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition flex items-center gap-1"
+                                            title="Sil"
                                         >
-                                            Sil <Trash2 size={16}/>
+                                            <Trash2 size={16}/>
                                         </button>
-
-                                    </td>
-                                    <td className="p-4 text-right">
                                         <button
                                             onClick={() => navigate(`/dashboard/plan/${plan.id}`)}
-                                            className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-100 flex items-center gap-1 ml-auto"
+                                            className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-100 flex items-center gap-1"
                                         >
                                             Görüntüle <ArrowRight size={12}/>
                                         </button>
